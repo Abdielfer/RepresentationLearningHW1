@@ -71,16 +71,15 @@ class BassetDataset(Dataset):
         """
 
         idx = self.ids[i]
-
+        targ = torch.tensor(self.inputs[idx])
+        seq = targ[0]       
         # Sequence & Target
-        output = {'sequence': None, 'target': None}
-
-        # WRITE CODE HERE
-
+        output = {'sequence': seq, 'target': targ}
         return output
 
     def __len__(self):
         # WRITE CODE HERE
+        
         return 0
 
     def get_seq_len(self):
@@ -105,63 +104,63 @@ class Basset(nn.Module):
     You will also need to use some Convolution Arithmetic
     """
 
-    def __init__(self):
-        super(Basset, self).__init__()
+#     def __init__(self):
+#         super(Basset, self).__init__()
 
-        self.dropout = ?  # should be float
-        self.num_cell_types = 164
+#         self.dropout = ?  # should be float
+#         self.num_cell_types = 164
 
-        self.conv1 = nn.Conv2d(1, 300, (19, ?), stride=(1, 1), padding=(9, 0))
-        self.conv2 = nn.Conv2d(300, ?, (?, 1), stride=(1, 1), padding=(?, 0))
-        self.conv3 = nn.Conv2d(?, 200, (?, 1), stride=(1, 1), padding=(4, 0))
+#         self.conv1 = nn.Conv2d(1, 300, (19, ?), stride=(1, 1), padding=(9, 0))
+#         self.conv2 = nn.Conv2d(300, ?, (?, 1), stride=(1, 1), padding=(?, 0))
+#         self.conv3 = nn.Conv2d(?, 200, (?, 1), stride=(1, 1), padding=(4, 0))
 
-        self.bn1 = nn.BatchNorm2d(300)
-        self.bn2 = nn.BatchNorm2d(?)
-        self.bn3 = nn.BatchNorm2d(200)
-        self.maxpool1 = nn.MaxPool2d((3, 1))
-        self.maxpool2 = nn.MaxPool2d((?, 1))
-        self.maxpool3 = nn.MaxPool2d((?, 1))
+#         self.bn1 = nn.BatchNorm2d(300)
+#         self.bn2 = nn.BatchNorm2d(?)
+#         self.bn3 = nn.BatchNorm2d(200)
+#         self.maxpool1 = nn.MaxPool2d((3, 1))
+#         self.maxpool2 = nn.MaxPool2d((?, 1))
+#         self.maxpool3 = nn.MaxPool2d((?, 1))
 
-        self.fc1 = nn.Linear(13*200, ?)
-        self.bn4 = nn.BatchNorm1d(?)
+#         self.fc1 = nn.Linear(13*200, ?)
+#         self.bn4 = nn.BatchNorm1d(?)
 
-        self.fc2 = nn.Linear(1000, ?)
-        self.bn5 = nn.BatchNorm1d(?)
+#         self.fc2 = nn.Linear(1000, ?)
+#         self.bn5 = nn.BatchNorm1d(?)
 
-        self.fc3 = nn.Linear(?, self.num_cell_types)
+#         self.fc3 = nn.Linear(?, self.num_cell_types)
 
-    def forward(self, x):
-        """
-        Compute forward pass for the model.
-        nn.Module will automatically create the `.backward` method!
+#     def forward(self, x):
+#         """
+#         Compute forward pass for the model.
+#         nn.Module will automatically create the `.backward` method!
 
-        Note:
-            * You will have to use torch's functional interface to 
-              complete the forward method as it appears in the supplementary material
-            * There are additional batch norm layers defined in `__init__`
-              which you will want to use on your fully connected layers
-            * Don't include the output activation here!
-        """
+#         Note:
+#             * You will have to use torch's functional interface to 
+#               complete the forward method as it appears in the supplementary material
+#             * There are additional batch norm layers defined in `__init__`
+#               which you will want to use on your fully connected layers
+#             * Don't include the output activation here!
+#         """
 
-        # WRITE CODE HERE
-        return 0
+#         # WRITE CODE HERE
+#         return 0
 
 
-def compute_fpr_tpr(y_true, y_pred):
-    """
-    Computes the False Positive Rate and True Positive Rate
-    Args:
-        :param y_true: groundtruth labels (np.array of ints [0 or 1])
-        :param y_pred: model decisions (np.array of ints [0 or 1])
+# def compute_fpr_tpr(y_true, y_pred):
+#     """
+#     Computes the False Positive Rate and True Positive Rate
+#     Args:
+#         :param y_true: groundtruth labels (np.array of ints [0 or 1])
+#         :param y_pred: model decisions (np.array of ints [0 or 1])
 
-    :Return: dict with keys 'tpr', 'fpr'.
-             values are floats
-    """
-    output = {'fpr': 0., 'tpr': 0.}
+#     :Return: dict with keys 'tpr', 'fpr'.
+#              values are floats
+#     """
+#     output = {'fpr': 0., 'tpr': 0.}
 
-    # WRITE CODE HERE
+#     # WRITE CODE HERE
 
-    return output
+#     return output
 
 
 def compute_fpr_tpr_dumb_model():
