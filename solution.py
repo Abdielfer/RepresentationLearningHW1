@@ -95,11 +95,7 @@ class BassetDataset(Dataset):
         """
         Answer to Q1 part 3
         """
-        ans = False
-        shape = [4,1,600]
-        comp = [4,1,BassetDataset.get_seq_len]
-        
-        return shape == comp
+        return (torch.empty(4,1,self.inputs[0][0][0].size)).shape == self.inputs[0].shape
 
 
 class Basset(nn.Module):
