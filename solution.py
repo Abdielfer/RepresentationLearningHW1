@@ -83,15 +83,15 @@ class BassetDataset(Dataset):
         return output
 
     def __len__(self):
-        return self.inputs.size(0)
+        return self.inputs.shape[0]
 
-    def get_seq_len(self):
+    def get_seq_len(self):  # OK
         """
         Answer to Q1 part 2
         """
         return self.inputs[0][0].size
 
-    def is_equivalent(self):
+    def is_equivalent(self):   # OK
         """
         Answer to Q1 part 3
         """
@@ -108,7 +108,7 @@ class Basset(nn.Module):
     def __init__(self):
         super(Basset, self).__init__()
 
-        # self.dropout = 300  # should be float
+        # self.dropout =   # should be float
         # self.num_cell_types = 164
 
         # self.conv1 = nn.Conv2d(1, 300, (19, ?), stride=(1, 1), padding=(9, 0))
