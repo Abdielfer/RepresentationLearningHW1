@@ -71,26 +71,27 @@ class BassetDataset(Dataset):
         """
 
         idx = self.ids[i]
-        targ = torch.tensor(self.inputs[idx]).float32
+        targ = torch.Tensor(self.inputs[idx]) 
         seq = targ[0]       
         # Sequence & Target
         output = {'sequence': seq, 'target': targ}
         return output
 
     def __len__(self):
-        return self.inputs[0].size(0)
+        return self.inputs.size(0)
 
     def get_seq_len(self):
         """
         Answer to Q1 part 2
         """
-        return self.inputs[0][0][0].size(0)
+        return self.inputs[0][0].size(0)
 
     def is_equivalent(self):
         """
         Answer to Q1 part 3
         """
-        
+        seq_len = get_seq_len()
+        comp = [4,1,seq_len]
         # WRITE CODE HERE
         return 0
 
