@@ -3,6 +3,7 @@
 import os
 import random
 from traceback import print_tb
+from xmlrpc.client import boolean
 
 import numpy as np
 import torch
@@ -73,11 +74,10 @@ class BassetDataset(Dataset):
 
         idx = self.ids[i]
 
-        targ = torch.FloatTensor(self.inputs[idx]) 
-        print(targ)
+        seq = torch.FloatTensor(self.inputs[idx])
+        print(seq.shape)
+        targ = seq[0] 
         print(targ.shape)
-        seq = targ[0][0] 
-        print(seq)      
         # Sequence & Target
         output = {'sequence': seq, 'target': targ}
         return output
@@ -95,10 +95,11 @@ class BassetDataset(Dataset):
         """
         Answer to Q1 part 3
         """
-        seq_len = get_seq_len()
-        comp = [4,1,seq_len]
-        # WRITE CODE HERE
-        return 0
+        ans = False
+        shape = [4,1,600]
+        comp = [4,1,BassetDataset.get_seq_len]
+        
+        return shape == comp
 
 
 class Basset(nn.Module):
