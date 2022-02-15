@@ -71,18 +71,15 @@ class BassetDataset(Dataset):
         * The target must also be converted to float32
         * When in doubt, look at the output of __getitem__ !
         """
-
         idx = self.ids[i]
-
-        seq = torch.FloatTensor(self.inputs[idx])
+        seq = torch.FloatTensor(np.transpose(self.inputs[idx],(1,2,0)))
         print(seq.shape)
-        targ = seq[0] 
-        print(targ.shape)
-        # Sequence & Target
+        targ = torch.FloatTensor(self.outputs[idx])
+        print(targ.shape) 
         output = {'sequence': seq, 'target': targ}
         return output
 
-    def __len__(self):
+    def __len__(self):  # ok
         return self.inputs.shape[0]
 
     def get_seq_len(self):  # OK
@@ -108,19 +105,19 @@ class Basset(nn.Module):
     def __init__(self):
         super(Basset, self).__init__()
 
-        # self.dropout =   # should be float
+        # self.dropout = 0.3 # should be float
         # self.num_cell_types = 164
 
-        # self.conv1 = nn.Conv2d(1, 300, (19, ?), stride=(1, 1), padding=(9, 0))
-        # self.conv2 = nn.Conv2d(300, ?, (?, 1), stride=(1, 1), padding=(?, 0))
-        # self.conv3 = nn.Conv2d(?, 200, (?, 1), stride=(1, 1), padding=(4, 0))
+        # self.conv1 = nn.Conv2d(1, 300, (19, 1), stride=(1, 1), padding=(9, 0))
+        # self.conv2 = nn.Conv2d(300, 200, (11, 1), stride=(1, 1), padding=(?, 0))
+        # self.conv3 = nn.Conv2d(200, 200, (7, 1), stride=(1, 1), padding=(4, 0))
 
         # self.bn1 = nn.BatchNorm2d(300)
-        # self.bn2 = nn.BatchNorm2d(?)
+        # self.bn2 = nn.BatchNorm2d(200)
         # self.bn3 = nn.BatchNorm2d(200)
         # self.maxpool1 = nn.MaxPool2d((3, 1))
-        # self.maxpool2 = nn.MaxPool2d((?, 1))
-        # self.maxpool3 = nn.MaxPool2d((?, 1))
+        # self.maxpool2 = nn.MaxPool2d((4, 1))
+        # self.maxpool3 = nn.MaxPool2d((4, 1))
 
         # self.fc1 = nn.Linear(13*200, ?)
         # self.bn4 = nn.BatchNorm1d(?)
@@ -130,6 +127,7 @@ class Basset(nn.Module):
 
         # self.fc3 = nn.Linear(?, self.num_cell_types)
 
+  
     def forward(self, x):
         """
         Compute forward pass for the model.
