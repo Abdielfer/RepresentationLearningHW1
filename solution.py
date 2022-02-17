@@ -116,30 +116,44 @@ class Basset(nn.Module):
         self.maxpool1 = nn.MaxPool2d((3, 1))
         self.maxpool2 = nn.MaxPool2d((4, 1))
         self.maxpool3 = nn.MaxPool2d((4, 1))
+        
+        self.flattenStep = nn.Flatten()
 
         self.fc1 = nn.Linear(13*200, 1000)
         self.bn4 = nn.BatchNorm1d(1000)
-
+        self.dropingOut_1 = nn.Dropout(self.dropout)
         self.fc2 = nn.Linear(1000, 1000)
         self.bn5 = nn.BatchNorm1d(1000)
-
+        self.dropingOut_2 = nn.Dropout(self.dropout)
         self.fc3 = nn.Linear(1000, self.num_cell_types)
+
 ### Creating a ModuleList to do the fordward propagation with 
         self.my_SequencedNet = torch.nn.ModuleList()
-        self.my_SequencedNet.append(self.conv1)  
-        self.my_SequencedNet.append(self.conv2) 
-        self.my_SequencedNet.append(self.conv3)
+        self.my_SequencedNet.append(self.conv1) 
         self.my_SequencedNet.append(self.bn1)
-        self.my_SequencedNet.append(self.bn2)
-        self.my_SequencedNet.append(self.bn3)
         self.my_SequencedNet.append(self.maxpool1)
+        
+        self.my_SequencedNet.append(self.conv2) 
+        self.my_SequencedNet.append(self.bn2)
         self.my_SequencedNet.append(self.maxpool2)
+  
+        self.my_SequencedNet.append(self.conv3)
+        self.my_SequencedNet.append(self.bn3)
         self.my_SequencedNet.append(self.maxpool3)
+
+        self.my_SequencedNet.append(self.flattenStep)
+
         self.my_SequencedNet.append(self.fc1)
         self.my_SequencedNet.append(self.bn4)
+        self.my_SequencedNet.append(self.dropingOut_1)
+
         self.my_SequencedNet.append(self.fc2)
         self.my_SequencedNet.append(self.bn5)
+        self.my_SequencedNet.append(self.dropingOut_2)
+
         self.my_SequencedNet.append(self.fc3)
+
+
   
     def forward(self, x):
         """
@@ -168,7 +182,16 @@ def compute_fpr_tpr(y_true, y_pred):
     :Return: dict with keys 'tpr', 'fpr'.
              values are floats
     """
-    output = {'fpr': 0., 'tpr': 0.}
+    n = len(y_true)
+    fpr = 0
+    tpr = 0
+    for i in range(n):
+        if y_true[i] == y_pred[i]:
+            tpr +=1
+        else: 
+            fpr += 1
+
+    output = {'fpr': fpr, 'tpr': tpr}
 
     # WRITE CODE HERE
 
@@ -250,6 +273,7 @@ def compute_auc_untrained_model(model, dataloader, device):
              auc value should be float
 
     Notes:
+
     * Dont forget to re-apply your output activation!
     * Make sure this function works with arbitrarily small dataset sizes!
     * You should collect all the targets and model outputs and then compute AUC at the end
