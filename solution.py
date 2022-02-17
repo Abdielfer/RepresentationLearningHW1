@@ -58,7 +58,7 @@ class BassetDataset(Dataset):
         if self.split == 'test':
             self.id_vars = np.char.decode(self.dataset['test_headers'])
 
-    def __getitem__(self, i):
+    def __getitem__(self, i):  # ok
         """
         Returns the sequence and the target at index i
 
@@ -73,9 +73,7 @@ class BassetDataset(Dataset):
         """
         idx = self.ids[i]
         seq = torch.FloatTensor(np.transpose(self.inputs[idx],(1,2,0)))
-        print(seq.shape)
         targ = torch.FloatTensor(self.outputs[idx])
-        print(targ.shape) 
         output = {'sequence': seq, 'target': targ}
         return output
 
@@ -105,28 +103,43 @@ class Basset(nn.Module):
     def __init__(self):
         super(Basset, self).__init__()
 
-        # self.dropout = 0.3 # should be float
-        # self.num_cell_types = 164
+        self.dropout = 0.3 # should be float
+        self.num_cell_types = 164
 
-        # self.conv1 = nn.Conv2d(1, 300, (19, 1), stride=(1, 1), padding=(9, 0))
-        # self.conv2 = nn.Conv2d(300, 200, (11, 1), stride=(1, 1), padding=(?, 0))
-        # self.conv3 = nn.Conv2d(200, 200, (7, 1), stride=(1, 1), padding=(4, 0))
+        self.conv1 = nn.Conv2d(1, 300, (19, 4), stride=(1, 1), padding=(9, 0))
+        self.conv2 = nn.Conv2d(300, 200, (11, 1), stride=(1, 1), padding=(5, 0))
+        self.conv3 = nn.Conv2d(200, 200, (7, 1), stride=(1, 1), padding=(4, 0))
 
-        # self.bn1 = nn.BatchNorm2d(300)
-        # self.bn2 = nn.BatchNorm2d(200)
-        # self.bn3 = nn.BatchNorm2d(200)
-        # self.maxpool1 = nn.MaxPool2d((3, 1))
-        # self.maxpool2 = nn.MaxPool2d((4, 1))
-        # self.maxpool3 = nn.MaxPool2d((4, 1))
+        self.bn1 = nn.BatchNorm2d(300)
+        self.bn2 = nn.BatchNorm2d(200)
+        self.bn3 = nn.BatchNorm2d(200)
+        self.maxpool1 = nn.MaxPool2d((3, 1))
+        self.maxpool2 = nn.MaxPool2d((4, 1))
+        self.maxpool3 = nn.MaxPool2d((4, 1))
 
-        # self.fc1 = nn.Linear(13*200, ?)
-        # self.bn4 = nn.BatchNorm1d(?)
+        self.fc1 = nn.Linear(13*200, 1000)
+        self.bn4 = nn.BatchNorm1d(1000)
 
-        # self.fc2 = nn.Linear(1000, ?)
-        # self.bn5 = nn.BatchNorm1d(?)
+        self.fc2 = nn.Linear(1000, 1000)
+        self.bn5 = nn.BatchNorm1d(1000)
 
-        # self.fc3 = nn.Linear(?, self.num_cell_types)
-
+        self.fc3 = nn.Linear(1000, self.num_cell_types)
+### Creating a ModuleList to do the fordward propagation with 
+        self.my_SequencedNet = torch.nn.ModuleList()
+        self.my_SequencedNet.append(self.conv1)  
+        self.my_SequencedNet.append(self.conv2) 
+        self.my_SequencedNet.append(self.conv3)
+        self.my_SequencedNet.append(self.bn1)
+        self.my_SequencedNet.append(self.bn2)
+        self.my_SequencedNet.append(self.bn3)
+        self.my_SequencedNet.append(self.maxpool1)
+        self.my_SequencedNet.append(self.maxpool2)
+        self.my_SequencedNet.append(self.maxpool3)
+        self.my_SequencedNet.append(self.fc1)
+        self.my_SequencedNet.append(self.bn4)
+        self.my_SequencedNet.append(self.fc2)
+        self.my_SequencedNet.append(self.bn5)
+        self.my_SequencedNet.append(self.fc3)
   
     def forward(self, x):
         """
@@ -140,9 +153,9 @@ class Basset(nn.Module):
               which you will want to use on your fully connected layers
             * Don't include the output activation here!
         """
+        self.model = torch.nn.Sequential(*self.my_SequencedNet)
+        return self.model(x)
 
-        # WRITE CODE HERE
-        return 0
 
 
 def compute_fpr_tpr(y_true, y_pred):
