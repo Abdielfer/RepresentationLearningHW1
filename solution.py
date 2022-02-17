@@ -172,7 +172,7 @@ class Basset(nn.Module):
 
 
 
-def compute_fpr_tpr(y_true, y_pred):
+def compute_fpr_tpr(y_true, y_pred):  #ok
     """
     Computes the False Positive Rate and True Positive Rate
     Args:
@@ -182,19 +182,28 @@ def compute_fpr_tpr(y_true, y_pred):
     :Return: dict with keys 'tpr', 'fpr'.
              values are floats
     """
-    n = len(y_true)
+    n = len(y_true) 
+    tpr = 0 
     fpr = 0
-    tpr = 0
+    tn = 0
+    fn = 0
     for i in range(n):
-        if y_true[i] == y_pred[i]:
-            tpr +=1
+        if y_pred[i] == 1:
+            if y_true[i] == y_pred[i]: 
+                tpr += 1
+            else:
+                fpr += 1
         else: 
-            fpr += 1
+            if y_true[i] == y_pred[i]: 
+                tn += 1
+            else:
+                fn += 1
 
+    print(tpr,' count :',fpr)
+    tpr = tpr/(tpr + fn)
+    fpr = fpr/(fpr + tn)
+    print(tpr,' rate :',fpr )
     output = {'fpr': fpr, 'tpr': tpr}
-
-    # WRITE CODE HERE
-
     return output
 
 
