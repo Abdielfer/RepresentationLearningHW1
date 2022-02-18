@@ -238,12 +238,10 @@ def compute_fpr_tpr_dumb_model():
             else: 
                 predictedClass[idx] = 1
        fpr_tpr_dic = compute_fpr_tpr(realValues, predictedClass)
-       print(fpr_tpr_dic) 
        output['fpr_list'].append(fpr_tpr_dic.__getitem__('fpr'))
        output['tpr_list'].append(fpr_tpr_dic.__getitem__('tpr'))
        predictedClass *= 0 
-    print(output['tpr_list'],'\n', output['fpr_list']) 
-    
+
     return output
 
 
@@ -263,8 +261,24 @@ def compute_fpr_tpr_smart_model():
             Do the same for output['tpr_list']
     """
     output = {'fpr_list': [], 'tpr_list': []}
-
-    # WRITE CODE HERE
+    threshold = np.round_((np.arange(0,1,0.05)),2)
+    realValues = np.random.randint(2, size=1000)
+    positiveProb = np.random.uniform(0.4,1, size = 1000)
+    negativeProb = np.random.uniform(0,0.6, size = 1000)
+    prob = np.multiply(positiveProb,realValues) + np.multiply(negativeProb,(1-realValues))
+    predictedClass = np.empty((1000,))
+    fpr_tpr_dic = {}
+    for k in threshold:
+       for idx in range(0,1000):
+            if prob[idx] < k:
+                predictedClass[idx] = 0
+            else: 
+                predictedClass[idx] = 1
+       fpr_tpr_dic = compute_fpr_tpr(realValues, predictedClass)
+       print(fpr_tpr_dic) 
+       output['fpr_list'].append(fpr_tpr_dic.__getitem__('fpr'))
+       output['tpr_list'].append(fpr_tpr_dic.__getitem__('tpr'))
+       predictedClass *= 0 
 
     return output
 
