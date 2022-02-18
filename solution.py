@@ -131,24 +131,29 @@ class Basset(nn.Module):
         self.my_SequencedNet = torch.nn.ModuleList()
         self.my_SequencedNet.append(self.conv1) 
         self.my_SequencedNet.append(self.bn1)
+        self.my_SequencedNet.append(nn.ReLU())
         self.my_SequencedNet.append(self.maxpool1)
         
         self.my_SequencedNet.append(self.conv2) 
         self.my_SequencedNet.append(self.bn2)
+        self.my_SequencedNet.append(nn.ReLU())
         self.my_SequencedNet.append(self.maxpool2)
   
         self.my_SequencedNet.append(self.conv3)
         self.my_SequencedNet.append(self.bn3)
+        self.my_SequencedNet.append(nn.ReLU())
         self.my_SequencedNet.append(self.maxpool3)
 
         self.my_SequencedNet.append(self.flattenStep)
 
         self.my_SequencedNet.append(self.fc1)
         self.my_SequencedNet.append(self.bn4)
+        self.my_SequencedNet.append(nn.ReLU())
         self.my_SequencedNet.append(self.dropingOut_1)
 
         self.my_SequencedNet.append(self.fc2)
         self.my_SequencedNet.append(self.bn5)
+        self.my_SequencedNet.append(nn.ReLU())
         self.my_SequencedNet.append(self.dropingOut_2)
 
         self.my_SequencedNet.append(self.fc3)
@@ -199,10 +204,8 @@ def compute_fpr_tpr(y_true, y_pred):  #ok
             else:
                 fn += 1
 
-    print(tpr,' count :',fpr)
     tpr = tpr/(tpr + fn)
     fpr = fpr/(fpr + tn)
-    print(tpr,' rate :',fpr )
     output = {'fpr': fpr, 'tpr': tpr}
     return output
 
@@ -221,12 +224,26 @@ def compute_fpr_tpr_dumb_model():
                  output['fpr_list'][-1] corresponds to k=0.95
 
             Do the same for output['tpr_list']
-
     """
     output = {'fpr_list': [], 'tpr_list': []}
-
-    # WRITE CODE HERE
-
+    threshold = np.round_((np.arange(0,1,0.05)),2)
+    realValues = np.random.randint(2, size=1000)
+    predictedProb = np.random.uniform(0,1, size = 1000)
+    predictedClass = np.empty((1000,))
+    fpr_tpr_dic = {}
+    for k in threshold:
+       for idx in range(0,1000):
+            if predictedProb[idx] < k:
+                predictedClass[idx] = 0
+            else: 
+                predictedClass[idx] = 1
+       fpr_tpr_dic = compute_fpr_tpr(realValues, predictedClass)
+       print(fpr_tpr_dic) 
+       output['fpr_list'].append(fpr_tpr_dic.__getitem__('fpr'))
+       output['tpr_list'].append(fpr_tpr_dic.__getitem__('tpr'))
+       predictedClass *= 0 
+    print(output['tpr_list'],'\n', output['fpr_list']) 
+    
     return output
 
 
