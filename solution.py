@@ -209,8 +209,38 @@ def compute_fpr_tpr(y_true, y_pred):  #ok
     output = {'fpr': fpr, 'tpr': tpr}
     return output
 
+def tpr_fpr_byThreshold(real,predicted,thresholds):
+    """
+    NOTE : since that's a repeted opperation I deside to implement a new function to make code more readable and short 
+    Helper function. It calculates the fpr and tpr by each <threshold>. 
+    :Return: dict with keys 'tpr_list', 'fpr_list'.
+             These lists contain the tpr and fpr for different thresholds (k)
+             fpr and tpr values in the lists should be floats
+             Order the lists such that:
+                 output['fpr_list'][0] corresponds to k=0.
+                 output['fpr_list'][1] corresponds to k=0.05
+                 ...
+                 output['fpr_list'][-1] corresponds to k=0.95
 
-def compute_fpr_tpr_dumb_model():
+            Do the same for output['tpr_list']
+    """
+    output = {'fpr_list': [], 'tpr_list': []}
+    predictedClass = np.empty((len(real),))
+    fpr_tpr_dic = {}
+    for k in thresholds:
+       for idx in range(0,1000):
+            if predicted[idx] < k:
+                predictedClass[idx] = 0
+            else: 
+                predictedClass[idx] = 1
+       fpr_tpr_dic = compute_fpr_tpr(real, predictedClass)
+       output['fpr_list'].append(fpr_tpr_dic.__getitem__('fpr'))
+       output['tpr_list'].append(fpr_tpr_dic.__getitem__('tpr'))
+       predictedClass *= 0 
+    return output
+
+
+def compute_fpr_tpr_dumb_model(): #ok
     """
     Simulates a dumb model and computes the False Positive Rate and True Positive Rate
 
@@ -229,23 +259,11 @@ def compute_fpr_tpr_dumb_model():
     threshold = np.round_((np.arange(0,1,0.05)),2)
     realValues = np.random.randint(2, size=1000)
     predictedProb = np.random.uniform(0,1, size = 1000)
-    predictedClass = np.empty((1000,))
-    fpr_tpr_dic = {}
-    for k in threshold:
-       for idx in range(0,1000):
-            if predictedProb[idx] < k:
-                predictedClass[idx] = 0
-            else: 
-                predictedClass[idx] = 1
-       fpr_tpr_dic = compute_fpr_tpr(realValues, predictedClass)
-       output['fpr_list'].append(fpr_tpr_dic.__getitem__('fpr'))
-       output['tpr_list'].append(fpr_tpr_dic.__getitem__('tpr'))
-       predictedClass *= 0 
-
+    output = tpr_fpr_byThreshold(realValues,predictedProb,threshold)
     return output
 
 
-def compute_fpr_tpr_smart_model():
+def compute_fpr_tpr_smart_model(): #ok
     """
     Simulates a smart model and computes the False Positive Rate and True Positive Rate
 
@@ -266,24 +284,11 @@ def compute_fpr_tpr_smart_model():
     positiveProb = np.random.uniform(0.4,1, size = 1000)
     negativeProb = np.random.uniform(0,0.6, size = 1000)
     prob = np.multiply(positiveProb,realValues) + np.multiply(negativeProb,(1-realValues))
-    predictedClass = np.empty((1000,))
-    fpr_tpr_dic = {}
-    for k in threshold:
-       for idx in range(0,1000):
-            if prob[idx] < k:
-                predictedClass[idx] = 0
-            else: 
-                predictedClass[idx] = 1
-       fpr_tpr_dic = compute_fpr_tpr(realValues, predictedClass)
-       print(fpr_tpr_dic) 
-       output['fpr_list'].append(fpr_tpr_dic.__getitem__('fpr'))
-       output['tpr_list'].append(fpr_tpr_dic.__getitem__('tpr'))
-       predictedClass *= 0 
-
+    output = tpr_fpr_byThreshold(realValues,prob,threshold)
     return output
 
 
-def compute_auc_both_models():
+def compute_auc_both_models(): #ok
     """
     Simulates a dumb model and a smart model and computes the AUC of both
 
@@ -292,9 +297,16 @@ def compute_auc_both_models():
              auc values in the lists should be floats
     """
     output = {'auc_dumb_model': 0., 'auc_smart_model': 0.}
-
-    # WRITE CODE HERE
-
+    realValues = np.random.randint(2, size=1000)
+    # dumb-model
+    dumbPredictedProb = np.random.uniform(0,1, size = 1000)
+    output['auc_dumb_model'] = compute_auc(realValues, dumbPredictedProb)['auc']
+    # Smart-model
+    smartPositiveProb = np.random.uniform(0.4,1, size = 1000)
+    smartNegativeProb = np.random.uniform(0,0.6, size = 1000)
+    smartProb = np.multiply(smartPositiveProb,realValues) + np.multiply(smartNegativeProb,(1-realValues))
+    output['auc_smart_model'] = compute_auc(realValues, smartProb)['auc']
+     
     return output
 
 
@@ -326,7 +338,7 @@ def compute_auc_untrained_model(model, dataloader, device):
     return output
 
 
-def compute_auc(y_true, y_model):
+def compute_auc(y_true, y_model): #ok
     """
     Computes area under the ROC curve (using method described in main.ipynb)
     Args:
@@ -340,20 +352,26 @@ def compute_auc(y_true, y_model):
     you need to transform it before passing it here!
     """
     output = {'auc': 0.}
-
-    # WRITE CODE HERE
-
+    leftReimann = 0.0
+    rigtReimann = 0.0
+    y_model_intern = np.array(y_model)  # in case y_model is a tensor comming from <solution.Basset> 
+    threshold = np.arange(0,1,0.05)
+    rates = {}
+    rates = tpr_fpr_byThreshold(y_true, y_model_intern,threshold)
+    for i in range(0,len(threshold)-1):
+        leftReimann += rates['tpr_list'][i]*abs(rates['fpr_list'][i+1]-rates['fpr_list'][i])
+    for i in range(1,len(threshold)):
+        rigtReimann += rates['tpr_list'][i]*abs(rates['fpr_list'][i]-rates['fpr_list'][i-1])
+    output['auc'] = (leftReimann + rigtReimann)*0.5
     return output
 
 
-def get_critereon():
+def get_critereon(): # ok
     """
     Picks the appropriate loss function for our task
     criterion should be subclass of torch.nn
     """
-
-    # WRITE CODE HERE
-
+    critereon = nn.BCEWithLogitsLoss()
     return critereon
 
 
