@@ -93,7 +93,7 @@ class BassetDataset(Dataset):
         return (torch.empty(4,1,self.inputs[0][0][0].size)).shape == self.inputs[0].shape
 
 
-class Basset(nn.Module):
+class Basset(nn.Module): #ok
     """
     Basset model
     Architecture specifications can be found in the supplementary material
@@ -160,7 +160,7 @@ class Basset(nn.Module):
 
 
   
-    def forward(self, x):
+    def forward(self, x): #ok
         """
         Compute forward pass for the model.
         nn.Module will automatically create the `.backward` method!
@@ -209,7 +209,7 @@ def compute_fpr_tpr(y_true, y_pred):  #ok
     output = {'fpr': fpr, 'tpr': tpr}
     return output
 
-def tpr_fpr_byThreshold(real,predicted,thresholds):
+def tpr_fpr_byThreshold(real,predicted,thresholds): #ok
     """
     NOTE : since that's a repeted opperation I deside to implement a new function to make code more readable and short 
     Helper function. It calculates the fpr and tpr by each <threshold>. 
@@ -234,8 +234,8 @@ def tpr_fpr_byThreshold(real,predicted,thresholds):
             else: 
                 predictedClass[idx] = 1
        fpr_tpr_dic = compute_fpr_tpr(real, predictedClass)
-       output['fpr_list'].append(fpr_tpr_dic.__getitem__('fpr'))
-       output['tpr_list'].append(fpr_tpr_dic.__getitem__('tpr'))
+       output['fpr_list'].append(fpr_tpr_dic['fpr'])
+       output['tpr_list'].append(fpr_tpr_dic['tpr'])
        predictedClass *= 0 
     return output
 
@@ -310,7 +310,7 @@ def compute_auc_both_models(): #ok
     return output
 
 
-def compute_auc_untrained_model(model, dataloader, device):
+def compute_auc_untrained_model(model, dataloader, device): #Ok
     """
     Computes the AUC of your input model
 
@@ -331,10 +331,32 @@ def compute_auc_untrained_model(model, dataloader, device):
     * You should collect all the targets and model outputs and then compute AUC at the end
       (compute time should not be as much of a consideration here)
     """
-    output = {'auc': 0.}
+    
+    ''' 
+    ...the common practice for evaluating/validation is
+     using torch.no_grad() in pair with model.eval() to turn off 
+     gradients computation  
+     https://stackoverflow.com/questions/60018578
+    '''
+    output = {'auc': 0.0}
+    trueList = np.array([])
+    predList = np.array([],dtype=float)
+    model = model.to(device)
+    model.eval()
 
-    # WRITE CODE HERE
-
+    with torch.no_grad():
+        for k,minibatch in enumerate(dataloader):
+            pred = torch.sigmoid(model(minibatch["sequence"].to(device)))
+            pred_flat = (torch.reshape(pred.detach(),(-1,)).cpu())
+            predList= np.append(predList,pred_flat)
+            true = minibatch['target']
+            true_flat = (torch.reshape(true.detach(),(-1,)).cpu())
+            trueList = np.append(trueList,true_flat)
+            
+    y_true = np.array(trueList)
+    y_model = np.array(predList,dtype=float)    
+    output['auc'] = compute_auc(y_true,y_model)['auc']
+    print("auc:", output['auc'])
     return output
 
 
@@ -352,17 +374,27 @@ def compute_auc(y_true, y_model): #ok
     you need to transform it before passing it here!
     """
     output = {'auc': 0.}
-    leftReimann = 0.0
-    rigtReimann = 0.0
-    y_model_intern = np.array(y_model)  # in case y_model is a tensor comming from <solution.Basset> 
-    threshold = np.arange(0,1,0.05)
-    rates = {}
-    rates = tpr_fpr_byThreshold(y_true, y_model_intern,threshold)
-    for i in range(0,len(threshold)-1):
-        leftReimann += rates['tpr_list'][i]*abs(rates['fpr_list'][i+1]-rates['fpr_list'][i])
-    for i in range(1,len(threshold)):
-        rigtReimann += rates['tpr_list'][i]*abs(rates['fpr_list'][i]-rates['fpr_list'][i-1])
-    output['auc'] = (leftReimann + rigtReimann)*0.5
+    tpr = []
+    fpr = []
+    
+    k = np.arange(0,1,0.05)
+    m = len(k)
+##   A reescribir... 
+    for i in k:
+      corr_pred = np.multiply(y_true,(y_model>=i)).sum()
+      incorr_pred = np.multiply((1-y_true),(y_model>=i)).sum()
+
+      tpr.append(corr_pred/((y_true==1).sum()))
+      fpr.append(incorr_pred/((y_true==0).sum()))
+
+    leftReimann = 0
+    rigtReimann = 0
+    for i in range(0,m-1):
+        delta_fpr = fpr[i+1]-fpr[i]
+        leftReimann = leftReimann + abs(tpr[i]*delta_fpr)
+        rigtReimann = rigtReimann + abs(tpr[i+1]*delta_fpr)
+    output['auc'] = (leftReimann + rigtReimann)/2
+
     return output
 
 
