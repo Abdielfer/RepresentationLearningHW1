@@ -224,15 +224,15 @@ def tpr_fpr_byThreshold(real,predicted,thresholds): #ok
 
             Do the same for output['tpr_list']
     """
-    output = {'fpr_list': [], 'tpr_list': []}
+    output = {'fpr_list': [], 'tpr_list': []} 
     predictedClass = np.empty((len(real),))
     fpr_tpr_dic = {}
     for k in thresholds:
-       for idx in range(0,1000):
-            if predicted[idx] < k:
-                predictedClass[idx] = 0
-            else: 
+       for idx in range(len(real)):
+            if predicted[idx] >= k:
                 predictedClass[idx] = 1
+            else: 
+                predictedClass[idx] = 0
        fpr_tpr_dic = compute_fpr_tpr(real, predictedClass)
        output['fpr_list'].append(fpr_tpr_dic['fpr'])
        output['tpr_list'].append(fpr_tpr_dic['tpr'])
@@ -374,27 +374,21 @@ def compute_auc(y_true, y_model): #ok
     you need to transform it before passing it here!
     """
     output = {'auc': 0.}
+    tpr_fpr = {}
     tpr = []
     fpr = []
-    
     k = np.arange(0,1,0.05)
     m = len(k)
-##   A reescribir... 
-    for i in k:
-      corr_pred = np.multiply(y_true,(y_model>=i)).sum()
-      incorr_pred = np.multiply((1-y_true),(y_model>=i)).sum()
-
-      tpr.append(corr_pred/((y_true==1).sum()))
-      fpr.append(incorr_pred/((y_true==0).sum()))
-
+    tpr_fpr = tpr_fpr_byThreshold(y_true, y_model, k)
+    tpr = tpr_fpr['tpr_list']
+    fpr = tpr_fpr['fpr_list']
     leftReimann = 0
     rigtReimann = 0
-    for i in range(0,m-1):
+    for i in range(0,m-1): #ok
         delta_fpr = fpr[i+1]-fpr[i]
         leftReimann = leftReimann + abs(tpr[i]*delta_fpr)
         rigtReimann = rigtReimann + abs(tpr[i+1]*delta_fpr)
     output['auc'] = (leftReimann + rigtReimann)/2
-
     return output
 
 
