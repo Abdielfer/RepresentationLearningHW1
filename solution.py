@@ -224,8 +224,10 @@ def tpr_fpr_byThreshold(real,predicted,thresholds): #ok
 
             Do the same for output['tpr_list']
     """
-    output = {'fpr_list': [], 'tpr_list': []} 
-    predictedClass = np.empty((len(real),))
+    output = {'fpr_list': [], 'tpr_list': []}
+
+    predictedClass =real.copy()
+    predictedClass *= 0 
     fpr_tpr_dic = {}
     for k in thresholds:
        for idx in range(len(real)):
@@ -356,7 +358,6 @@ def compute_auc_untrained_model(model, dataloader, device): #Ok
     y_true = np.array(trueList)
     y_model = np.array(predList,dtype=float)    
     output['auc'] = compute_auc(y_true,y_model)['auc']
-    print("auc:", output['auc'])
     return output
 
 
@@ -423,12 +424,46 @@ def train_loop(model, train_dataloader, device, optimizer, criterion):
     If you do this, your training loop will be really slow!
     You should instead compute it every 50 or so iterations and aggregate ...
     """
-
+    """
+    Reference:
+    Example of optimization steps
+    
+    for input, target in dataset:
+        optimizer.zero_grad()
+        output = model(input)
+        loss = loss_fn(output, target)
+        loss.backward()
+        optimizer.step()
+    
+    from: https://pytorch.org/docs/stable/optim.html 
+    """
     output = {'total_score': 0.,
               'total_loss': 0.}
 
     # WRITE CODE HERE
-
+    cuda = torch.cuda.is_available()
+    proba = np.array([])
+    model = model.to(device)
+    loss = 0
+    total_score = 0
+    samples = 0 
+    for i, minibatch in enumerate(train_dataloader,1):
+        optimizer.zero_grad()
+        y_model = model(minibatch["sequence"].to(device))
+        y_true = minibatch['target'].to(device)
+        loss_func = criterion(y_model, y_true)
+        loss_func.backward()
+        optimizer.step()
+        proba = np.array(torch.flatten(torch.sigmoid(y_model.detach().cpu()),-1))
+        true = np.array(torch.flatten(y_true.detach().cpu(),-1))
+        score = compute_auc(true[0],proba[0])
+        loss += loss_func.sum().data.cpu().numpy()*minibatch['target'].size(0)
+        samples += minibatch['target'].size(0)
+        total_score += score['auc']
+        numberOfMinibatch = i
+    
+    output['total_score'] = total_score/numberOfMinibatch
+    output['total_loss'] = float(loss/samples)
     return output['total_score'], output['total_loss']
 
 
