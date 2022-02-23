@@ -442,7 +442,6 @@ def train_loop(model, train_dataloader, device, optimizer, criterion):
 
     # WRITE CODE HERE
     cuda = torch.cuda.is_available()
-    proba = np.array([])
     model = model.to(device)
     loss = 0
     total_score = 0
@@ -489,9 +488,28 @@ def valid_loop(model, valid_dataloader, device, optimizer, criterion):
     you may do simplifications like with the train_loop.
     """
 
-    output = {'total_score': 0.,
-              'total_loss': 0.}
+    output = {'total_score': 0., 'total_loss': 0.}
 
-    # WRITE CODE HERE
-
+    cuda = torch.cuda.is_available()
+    model = model.to(device)
+    loss = 0
+    total_score = 0
+    samples = 0 
+   
+    for i, minibatch in enumerate(valid_dataloader,1):
+        with torch.no_grad(): 
+            y_model = model(minibatch["sequence"].to(device))
+            y_true = minibatch['target'].to(device)
+            loss_func = criterion(y_model, y_true)
+            loss += loss_func.sum().data.cpu().numpy()*minibatch['target'].size(0)
+            proba = np.array(torch.flatten(torch.sigmoid(y_model.detach().cpu()),-1))
+            true = np.array(torch.flatten(y_true.detach().cpu(),-1))
+            score = compute_auc(true[0],proba[0])
+            total_score += score['auc']  
+            samples += minibatch['target'].size(0)
+            numberOfMinibatch = i
+    
+    output['total_score'] = total_score/numberOfMinibatch
+    output['total_loss'] = float(loss/samples)
     return output['total_score'], output['total_loss']
+
